@@ -24,6 +24,7 @@ public class ProtocolStream : IDisposable
         var stream = new NetworkStream(Socket);
         Leb128.Write(stream, (int)OutBuffer.Length);
         await stream.WriteAsync(OutBuffer.GetBuffer(), 0, (int) OutBuffer.Length + 1);
+        await OutBuffer.DisposeAsync();
         OutBuffer = new(256);
     }
 
