@@ -7,4 +7,4 @@ if (result == null) return;
 
 using var con = new Connection(result);
 await con.Handshake(Connection.HandshakeState.Status);
-await con.Status();
+Console.WriteLine(await con.Status());

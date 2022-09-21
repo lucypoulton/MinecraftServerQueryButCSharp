@@ -31,7 +31,6 @@ public class Connection : IDisposable
 
     public async Task Handshake(HandshakeState state)
     {
-        Console.WriteLine("Handshaking");
         Stream.WriteVarInt(0);
         Stream.WriteVarInt(ProtocolVersion);
         Stream.WriteString(EndPoint.Address.ToString());
@@ -39,22 +38,15 @@ public class Connection : IDisposable
         Stream.Write(port);
         Stream.WriteVarInt((int) state);
         await Stream.Flush();
-        await Stream.ReadPacket();
-        Stream.ReadVarInt();
-        Console.WriteLine(Stream.ReadString());
-        Console.WriteLine("Handshaking OK");
     }
 
-    public async Task Status()
+    public async Task<string> Status()
     {
-        Console.WriteLine("Getting status");
         Stream.WriteVarInt(0);
         await Stream.Flush();
-        Console.WriteLine("Reading packet");
         await Stream.ReadPacket();
-        Console.WriteLine("Parsing");
         Stream.ReadVarInt();
-        Console.WriteLine(Stream.ReadString());
+        return Stream.ReadString();
     }
 
     public void Dispose()

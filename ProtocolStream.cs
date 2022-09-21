@@ -23,18 +23,18 @@ public class ProtocolStream : IDisposable
     {
         var stream = new NetworkStream(Socket);
         Leb128.Write(stream, (int)OutBuffer.Length);
-        await stream.WriteAsync(OutBuffer.GetBuffer());
+        await stream.WriteAsync(OutBuffer.GetBuffer(), 0, (int) OutBuffer.Length + 1);
         OutBuffer = new(256);
     }
 
     public void Write(byte[] bytes)
     {
-        SocketStream.Write(bytes);
-    } 
-    
+        OutBuffer.Write(bytes);
+    }
+
     public void WriteVarInt(int value)
     {
-        Leb128.Write(SocketStream, value);
+        Leb128.Write(OutBuffer, value);
     }
 
     public int ReadVarInt()
@@ -47,7 +47,7 @@ public class ProtocolStream : IDisposable
     {
         var bytes = Encoding.UTF8.GetBytes(value);
         WriteVarInt(bytes.Length);
-        SocketStream.Write(bytes);
+        OutBuffer.Write(bytes);
     }
 
     public string ReadString()
@@ -57,13 +57,18 @@ public class ProtocolStream : IDisposable
         return Encoding.UTF8.GetString(InBuffer.GetBuffer(), (int)InBuffer.Position, length);
     }
 
-    public async Task ReadPacket()
+    private async Task ReadPacketInternal()
     {
         var length = Leb128.Read(SocketStream);
         var buffer = new byte[length];
         var read = await SocketStream.ReadAsync(buffer);
         if (read != length) throw new InvalidDataException("Failed to read string");
-        InBuffer = new MemoryStream(buffer, 0 , buffer.Length, true, true);
+        InBuffer = new MemoryStream(buffer, 0, buffer.Length, true, true);
+    }
+
+    public async Task ReadPacket()
+    {
+        await ReadPacketInternal().WaitAsync(TimeSpan.FromSeconds(1));
     }
 
     public void Dispose()

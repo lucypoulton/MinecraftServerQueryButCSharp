@@ -25,7 +25,7 @@ public static class Leb128
             value >>>= 7;
         }
 
-        await stream.WriteAsync(output.GetBuffer());
+        await stream.WriteAsync(output.GetBuffer(), 0, (int)output.Length);
     }
     
     /**
