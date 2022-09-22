@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using DnsClient;
 using DnsClient.Protocol;
 
-namespace MinecraftQuery;
+namespace MinecraftQuery.Util;
 
 public static class Resolver
 {
@@ -12,16 +12,19 @@ public static class Resolver
 
     private static readonly LookupClient Client = new();
 
-    public static async Task<IPEndPoint?> Resolve(string name)
+    public static async Task<KeyValuePair<string, IPEndPoint>?> Resolve(string name)
     {
         var match = IpRegex.Match(name);
         ushort port = 25565;
         if (match.Success)
         {
             if (match.Groups["ip"].Success)
-                return new IPEndPoint(
-                    IPAddress.Parse(match.Groups["ip"].Value),
-                    ushort.Parse(match.Groups["port"].Value)
+                return new(
+                    match.Groups["ip"].Value,
+                    new IPEndPoint(
+                        IPAddress.Parse(match.Groups["ip"].Value),
+                        ushort.Parse(match.Groups["port"].Value)
+                    )
                 );
             name = match.Groups["domain"].Value;
             port = ushort.Parse(match.Groups["port"].Value);
@@ -40,7 +43,7 @@ public static class Resolver
         if (aResult is { HasError: false })
         {
             var a = (ARecord)aResult.Answers.First(record => record is ARecord);
-            if (a != null) return new IPEndPoint(a.Address, port);
+            if (a != null) return new(name, new IPEndPoint(a.Address, port));
         }
 
         return null;

@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using System.Text;
+using MinecraftQuery.Util;
 
 namespace MinecraftQuery;
 
@@ -17,6 +18,7 @@ public class ProtocolStream : IDisposable
     {
         Socket = socket;
         SocketStream = new NetworkStream(socket);
+        SocketStream.ReadTimeout = 2000;
     }
 
     public async Task Flush()
@@ -62,8 +64,11 @@ public class ProtocolStream : IDisposable
     {
         var length = Leb128.Read(SocketStream);
         var buffer = new byte[length];
-        var read = await SocketStream.ReadAsync(buffer);
-        if (read != length) throw new InvalidDataException("Failed to read string");
+        var read = 0;
+        do
+        {
+            read += await SocketStream.ReadAsync(buffer, read, length - read);
+        } while (read < length);
         InBuffer = new MemoryStream(buffer, 0, buffer.Length, true, true);
     }
 

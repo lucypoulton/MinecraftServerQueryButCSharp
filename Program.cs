@@ -1,10 +1,27 @@
-﻿using MinecraftQuery;
+using MinecraftQuery;
+using MinecraftQuery.Util;
 
-var result = await Resolver.Resolve("node.lucypoulton.net:25566");
-await Console.Out.WriteLineAsync(result?.Address + " " + result?.Port);
+if (args.Length == 0)
+{
+    Console.WriteLine("Usage: mcquery <hostname>");
+    Environment.Exit(1);
+    return;
+}
 
-if (result == null) return;
+var endpoint = await Resolver.Resolve(args[0]);
 
-using var con = new Connection(result);
-await con.Handshake(Connection.HandshakeState.Status);
-Console.WriteLine(await con.Status());
+if (endpoint == null)
+{
+    Console.WriteLine("Failed to resolve hostname");
+    return;
+}
+
+var connection = new Connection(endpoint.Value.Value, endpoint.Value.Key);
+
+await connection.Handshake(Connection.HandshakeState.Status);
+var status = await connection.Status();
+Console.WriteLine($@"{endpoint.Value.Key} ({endpoint.Value.Value})
+{status.Version.Name} ({status.Version.Protocol})
+{status.Players.Online} / {status.Players.Max} players
+
+{ComponentUtil.ToPlainString(status.Description)}");

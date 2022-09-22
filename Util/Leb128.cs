@@ -1,4 +1,4 @@
-namespace MinecraftQuery;
+namespace MinecraftQuery.Util;
 
 /**
  * Helper functions for reading/writing signed LEB-128 encoded integers to/from streams.
