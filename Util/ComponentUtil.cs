@@ -10,13 +10,20 @@ public static class ComponentUtil
 
     private static void Concat(JsonNode component, StringBuilder builder)
     {
-        builder.Append(component["text"] ?? component["translate"]);
-        var extra = component["extra"]?.AsArray();
-        if (extra != null)
-            foreach (var node in extra)
-            {
-                Concat(node, builder);
-            }
+        try
+        {
+            builder.Append(component["text"] ?? component["translate"]);
+            var extra = component["extra"]?.AsArray();
+            if (extra != null)
+                foreach (var node in extra)
+                {
+                    Concat(node, builder);
+                }
+        }
+        catch (InvalidOperationException)
+        {
+            builder.Append(component.AsValue());
+        }
     }
 
     public static string ToPlainString(JsonNode component)
